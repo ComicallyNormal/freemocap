@@ -11,7 +11,9 @@ from skellycam.core.ipc.shared_memory.ring_buffer_shared_memory import SharedMem
 from skellycam.core.types.type_overloads import CameraIdString, WorkerType, TopicSubscriptionQueue
 from skellycam.utilities.wait_functions import wait_1ms
 from skellytracker.trackers.charuco_tracker.charuco_detector import CharucoDetector
-from skellytracker.trackers.mediapipe_tracker.mediapipe_detector import MediapipeDetector
+
+#from skellytracker.trackers.mediapipe_tracker.mediapipe_detector import MediapipeDetector
+from skellytracker.trackers.mediapipe_gpu_tracker.mediapipe_gpu_detector import MediapipeGPUDetector
 
 from freemocap.core.pipeline.pipeline_configs import RealtimePipelineConfig
 from freemocap.core.pipeline.pipeline_ipc import PipelineIPC
@@ -86,7 +88,7 @@ class RealtimeCameraNode:
         camera_shm = CameraSharedMemoryRingBuffer.recreate(dto=camera_shm_dto,
                                                            read_only=False)
         charuco_detector = CharucoDetector.create(config=config.calibration_task_config.detector_config)
-        mediapipe_detector = MediapipeDetector.create()
+        mediapipe_detector = MediapipeGPUDetector.create()
         try:
             logger.trace(f"Starting camera processing node for camera {camera_id}")
             frame_rec_array: np.recarray | None = None
@@ -113,9 +115,12 @@ class RealtimeCameraNode:
                         )
                     else:
                         rotated_image = frame_rec_array.image[0]
+
+                    
                     observation = mediapipe_detector.detect(
                         frame_number=frame_rec_array.frame_metadata.frame_number[0],
                         image=rotated_image, )
+                    # annotated_image = .....annotate_image(image, rotated_image)
                     # observation = charuco_detector.detect(
                     #     frame_number=frame_rec_array.frame_metadata.frame_number[0],
                     #     image=rotated_image, )
@@ -127,7 +132,7 @@ class RealtimeCameraNode:
                         message=CameraNodeOutputMessage(
                             camera_id=frame_rec_array.frame_metadata.camera_config.camera_id[0],
                             frame_number=frame_rec_array.frame_metadata.frame_number[0],
-                            observation=observation,
+                            observation=observation,#TODO: Where did you come from where did you go
                         ),
                     )
                     tok2 = time.perf_counter_ns()

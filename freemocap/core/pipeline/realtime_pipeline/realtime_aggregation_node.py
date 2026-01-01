@@ -104,7 +104,7 @@ class RealtimeAggregationNode:
             anipose_camera_group = AniposeCameraGroup.load(str(get_last_successful_calibration_toml_path()))
             while ipc.should_continue and not shutdown_self_flag.value:
                 wait_1ms()
-
+                
                 # Check for updated Pipeline Config
                 while not pipeline_config_subscription.empty():
                     pipeline_config_message: PipelineConfigUpdateMessage = pipeline_config_subscription.get()
@@ -140,11 +140,13 @@ class RealtimeAggregationNode:
                     #     camera_node_output_by_camera=camera_node_outputs,
                     #     multi_frame_number=latest_requested_frame)
 
+                    
                     triangulated = triangulate_frame_observations(frame_number=latest_requested_frame,
                                                                   frame_observations_by_camera={camera_id: camera_node_outputs[camera_id].observation
                                                      for camera_id in camera_node_outputs.keys()},
                                                                   anipose_camera_group=anipose_camera_group,
                                                                   )
+                        # tracked_points3d=triangulated.to_point_dictionary()
 
                     aggregation_output: AggregationNodeOutputMessage = AggregationNodeOutputMessage(
                         frame_number=latest_requested_frame,

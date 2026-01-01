@@ -19,11 +19,17 @@ import {
     MediapipeOverlayDataMessageSchema
 } from "@/services/server/server-helpers/image-overlay/mediapipe-types";
 import {
+    MediapipeGPUOverlayDataMessage,
+    MediapipeGPUOverlayDataMessageSchema
+} from "@/services/server/server-helpers/image-overlay/mediapipe-gpu-types";
+
+import {
     OverlayManager,
     OverlayRendererFactory
 } from "@/services/server/server-helpers/image-overlay/overlay-renderer-factory";
 import {ModelInfo} from "@/services/server/server-helpers/image-overlay/image-overlay-system";
 import {MediapipeObservation} from "@/services/server/server-helpers/image-overlay/mediapipe-overlay-renderer";
+import { loggerLink } from '@trpc/client';
 
 type FrameSubscriber = (bitmap: ImageBitmap) => void;
 type TrackedPointsSubscriber = (points: Map<string, Point3d>) => void;
@@ -92,6 +98,11 @@ function isCharucoOverlayDataMessage(data: any): data is CharucoOverlayDataMessa
 }
 function isMediapipeOverlayDataMessage(data: any): data is MediapipeOverlayDataMessage {
     const result = MediapipeOverlayDataMessageSchema.safeParse(data);
+    return result.success;
+}
+
+function isMediapipeGPUOverlayDataMessage(data: any): data is MediapipeGPUOverlayDataMessage {
+    const result = MediapipeGPUOverlayDataMessageSchema.safeParse(data);
     return result.success;
 }
 
@@ -166,6 +177,7 @@ export const ServerContextProvider: React.FC<{ children: ReactNode }> = ({childr
         };
 
         const handleMessage = async (event: MessageEvent): Promise<void> => {
+            console.log('handleMessage entered')
             if (event.data instanceof ArrayBuffer) {
                 try {
                     const result = await frameProcessorRef.current!.processFramePayload(event.data);
@@ -196,6 +208,7 @@ export const ServerContextProvider: React.FC<{ children: ReactNode }> = ({childr
                     const maxFrameNumber = Math.max(...Array.from(frameNumbers));
 
                     const onFrameRendered = (): void => {
+                        console.log('onFrameRendered Entered')
                         remainingFrames--;
                         if (remainingFrames === 0) {
                             ws.send({type: 'frameAcknowledgment', frameNumber: maxFrameNumber});
@@ -252,6 +265,12 @@ export const ServerContextProvider: React.FC<{ children: ReactNode }> = ({childr
                             latestObservationsRef.current.set(cameraId, observation);
                         }
                     }
+                    else if (isMediapipeGPUOverlayDataMessage(jsonData)) {
+                        for (const [cameraId, observation] of Object.entries(jsonData)) {
+                            latestObservationsRef.current.set(cameraId, observation);
+                        }
+                    }             
+
                     else if ('model_info' in jsonData && jsonData.model_info) {
                         // Handle model info updates
                         handleModelInfoUpdate(jsonData.model_info);
@@ -312,6 +331,7 @@ export const ServerContextProvider: React.FC<{ children: ReactNode }> = ({childr
     }, []);
 
     const subscribeToFrames = useCallback((cameraId: string, callback: FrameSubscriber): (() => void) => {
+        console.log('subscribeToFrames entered')
         if (!frameSubscribersRef.current.has(cameraId)) {
             frameSubscribersRef.current.set(cameraId, new Set());
         }

@@ -4,7 +4,9 @@ from pydantic import BaseModel, Field, ConfigDict
 from skellycam.core.camera.config.camera_config import CameraConfigs
 from skellycam.core.types.type_overloads import CameraIdString
 
-from skellytracker.trackers.mediapipe_tracker.mediapipe_detector import MediapipeDetectorConfig
+# from skellytracker.trackers.mediapipe_tracker.mediapipe_detector import MediapipeDetectorConfig
+from skellytracker.trackers.mediapipe_gpu_tracker.mediapipe_gpu_detector import MediapipeGPUDetectorConfig
+
 from skellytracker.trackers.charuco_tracker.charuco_detector import  CharucoDetectorConfig
 
 
@@ -32,8 +34,8 @@ class CalibrationpipelineConfig(BaseModel):
         )
 class MocapPipelineTaskConfig(BaseModel):
     @property
-    def detector_config(self) -> MediapipeDetectorConfig:
-        return MediapipeDetectorConfig()
+    def detector_config(self) -> MediapipeGPUDetectorConfig:
+        return MediapipeGPUDetectorConfig()
 
 class RealtimePipelineConfig(BaseModel):
     camera_configs: CameraConfigs

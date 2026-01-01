@@ -20,6 +20,7 @@ export class CanvasManager {
     private readonly maxWorkerErrors: number = 3;
 
     public setCanvasForCamera(cameraId: string, canvas: HTMLCanvasElement): boolean {
+        console.log(`setCanvasForCamera entered`);
         const existing = this.workers.get(cameraId);
         if (existing?.canvas === canvas && existing.initialized) {
             return true;
@@ -65,6 +66,8 @@ export class CanvasManager {
         bitmap: ImageBitmap,
         onRendered?: () => void
     ): boolean {
+        console.log(`Frame Update (sendFrameToWorker)! ${new Date().toString()}`);
+        
         const workerInfo = this.workers.get(cameraId);
 
         if (!workerInfo?.initialized) {

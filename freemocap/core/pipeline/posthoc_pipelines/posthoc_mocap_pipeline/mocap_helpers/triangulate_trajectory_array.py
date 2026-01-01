@@ -75,12 +75,14 @@ def triangulate_array(
     return triangulated3d_fr_id_xyz, reprojection_error, reprojection_error_by_camera
 
 
+#where did you come from cotton eyed joe?
 def triangulate_frame_observations(frame_number: int,
                                    frame_observations_by_camera: FrameObservationsByCamera,
                                    anipose_camera_group: AniposeCameraGroup,
                                    config: TriangulationConfig=TriangulationConfig(),
                                    calculate_reprojection_error: bool = False
                                    ) -> Observation3d:
+    # logger.info("triangulate_frame_observations entered") #1
     anipose_camera_group = subset_camera_names(data_dict=frame_observations_by_camera, anipose_camera_group=anipose_camera_group)
 
     ordered_frame_observations = preserve_camera_group_order(data_by_camera=frame_observations_by_camera,
@@ -101,6 +103,14 @@ def triangulate_frame_observations(frame_number: int,
             "Input data must have the same number of cameras as the camera group"
         )
     # add singleton frame dimension
+    # print(data2d_cam_id_xy.shape[0])
+    # print(data2d_cam_id_xy.shape[1])
+    # print(data2d_cam_id_xy.shape[2])
+
+    for cam, obs in ordered_frame_observations.items():
+        arr = obs.to_2d_array()
+        # print(cam, arr.shape)
+
     data2d_cam_fr_id_xyz = data2d_cam_id_xy.reshape((data2d_cam_id_xy.shape[0], 1, data2d_cam_id_xy.shape[1], data2d_cam_id_xy.shape[2]))
     triangulated_data, _, _ = triangulate_array(
         data2d_cam_id_xy=data2d_cam_fr_id_xyz,
@@ -108,29 +118,21 @@ def triangulate_frame_observations(frame_number: int,
         config=config,
         calculate_reprojection_error=calculate_reprojection_error,
     )
-
-    rotated_triangulated = rotate_by_180_deg_about_x(triangulated_data)
-
     return Observation3d(
         frame_number=frame_number,
-        triangulated_data=np.squeeze(rotated_triangulated),
+        triangulated_data=np.squeeze(triangulated_data),
         names=list(frame_observations_by_camera.values())[0].to_tracked_points().keys(),
         # reprojection_error=reprojection_error,
         # reprojection_error_by_camera=reprojection_error_by_camera,
     )
 
-def rotate_by_180_deg_about_x(points_3d: np.ndarray) -> np.ndarray:
-    rotation_matrix = np.array([[1, 0, 0],
-                                [0, -1, 0],
-                                [0, 0, -1]])
-    rotated_points = points_3d @ rotation_matrix.T
-    return rotated_points
 
 def triangulate_frame_groups(
         frame_groups: dict[int, FrameObservationsByCamera],
         camera_group: AniposeCameraGroup,
         config: TriangulationConfig,
 ) -> Trajectory3d:
+    # logger.info("triangulate frame groups entered")
     observations_3d = []
     frame_groups = dict(sorted(frame_groups.items()))
     for frame_number, frame_group in frame_groups.items():
@@ -145,6 +147,7 @@ def triangulate_trajectories(
         camera_group: AniposeCameraGroup,
         config: TriangulationConfig,
 ):
+    # logger.info("triangulate_trajectories entered")
     # TODO: move this validation into Trajectory2dGroup creation
     if len(set(trajectory.start_frame for trajectory in trajectory_group.values())) != 1:
         raise ValueError(
@@ -193,6 +196,7 @@ def triangulate_dict(
         start_frame: int | None = None,
         end_frame: int | None = None,
 ) -> Trajectory3d:
+    # logger.info("triangulate_dict entered")
     camera_group = subset_camera_names(
         data_dict=data2d_fr_mar_xy_by_camera, anipose_camera_group=camera_group
     )
@@ -219,7 +223,7 @@ def triangulate_dict(
         stacked_2d_data_list.append(data2d_fr_mar_xy)
 
     data2d_camera_fr_mar_xy = np.stack(stacked_2d_data_list,axis=0)
-    logger.info(f"shape of combined_2d_data: {data2d_camera_fr_mar_xy.shape}")
+    # logger.info(f"shape of combined_2d_data: {data2d_camera_fr_mar_xy.shape}")
 
     triangulated_data, reprojection_error, reprojection_error_by_camera = triangulate_array(
         data2d_camera_fr_mar_xy, camera_group, config
@@ -244,6 +248,12 @@ def subset_camera_names(data_dict: dict[CameraIdString, Any], anipose_camera_gro
             if camera.name in key:
                 valid_calibration_names.append(camera.name)
                 break
+    # logger.info("valid camera names:") #2
+    # for name in valid_calibration_names:
+    #     logger.info(name)
+    # logger.info("data dict keys")
+    # for key in data_dict.keys():
+    #     logger.info(key)
     if len(valid_calibration_names) != len(data_dict.keys()):
         raise ValueError(
             "Camera names in frame group do not match camera names in camera group. Make sure calibration matches input data."

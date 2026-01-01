@@ -1,10 +1,12 @@
 // overlay-renderer-factory.ts
 import { CharucoOverlayRenderer } from './charuco-overlay-renderer';
 import { MediapipeOverlayRenderer, MediapipeObservation } from './mediapipe-overlay-renderer';
+import { MediapipeGPUOverlayRenderer, MediapipeGPUObservation } from './mediapipe-gpu-overlay-renderer';
+
 import {BaseOverlayRenderer, ModelInfo} from "@/services/server/server-helpers/image-overlay/image-overlay-system";
 import {CharucoObservation} from "@/services/server/server-helpers/image-overlay/charuco-types";
 
-export type ObservationType = 'charuco_overlay' | 'mediapipe_overlay' | 'rtmpose_overlay';
+export type ObservationType = 'charuco_overlay' | 'mediapipe_overlay' | 'mediapipe_gpu_overlay' | 'rtmpose_overlay';
 
 
 /**
@@ -31,6 +33,9 @@ export class OverlayRendererFactory {
                 break;
             case 'mediapipe_overlay':
                 renderer = new MediapipeOverlayRenderer();
+                break;
+            case 'mediapipe_gpu_overlay':
+                renderer = new MediapipeGPUOverlayRenderer();
                 break;
             case 'rtmpose_overlay':
                 // Future: implement RTMPoseOverlayRenderer
@@ -78,6 +83,7 @@ export class OverlayRendererFactory {
         const mapping: Record<ObservationType, string[]> = {
             'charuco_overlay': ['CharucoTracker'],
             'mediapipe_overlay': ['MediapipeHolisticTracker', 'MediapipeTracker'],
+            'mediapipe_gpu_overlay':['MediapipeGPUTracker'],
             'rtmpose_overlay': ['RTMPoseTracker'],
         };
 
@@ -98,9 +104,11 @@ export class OverlayManager {
     public async processFrame(
         cameraId: string,
         sourceBitmap: ImageBitmap,
-        observation: CharucoObservation | MediapipeObservation | null
+        observation: CharucoObservation | MediapipeObservation | MediapipeGPUObservation | null
     ): Promise<ImageBitmap> {
         // Determine observation type
+        console.log(`Frame Update (processFrame)! ${new Date().toString()}`);
+        
         const observationType = observation?.message_type as ObservationType;
 
         if (!observationType && !observation) {

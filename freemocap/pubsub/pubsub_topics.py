@@ -3,10 +3,14 @@ import logging
 from pydantic import Field, model_validator
 from skellycam.core.types.type_overloads import CameraGroupIdString, CameraIdString
 from skellytracker.trackers.mediapipe_tracker.mediapipe_observation import MediapipeObservation
+from skellytracker.trackers.mediapipe_gpu_tracker.mediapipe_gpu_observation import MediapipeGPUObservation
+
 from skellytracker.trackers.charuco_tracker.charuco_observation import CharucoObservation
 from skellytracker.trackers.base_tracker.base_tracker_abcs import BaseObservation
 from freemocap.core.image_overlay.charuco_overlay_data import CharucoOverlayData
 from freemocap.core.image_overlay.mediapipe_overlay_data import MediapipeOverlayData
+from freemocap.core.image_overlay.mediapipe_gpu_overlay_data import MediapipeGPUOverlayData
+
 
 from freemocap.core.pipeline.pipeline_configs import RealtimePipelineConfig
 from freemocap.core.types.type_overloads import FrameNumberInt,  PipelineIdString, VideoIdString, \
@@ -71,10 +75,26 @@ class AggregationNodeOutputMessage(TopicMessageABC):
 
     @property
     def mediapipe_overlay_data(self) -> dict[CameraIdString, MediapipeOverlayData]:
+        # logger.info("entered mediapipe_overlay_data")
         overlay_data: dict[CameraIdString, MediapipeOverlayData] = {}
         for camera_id, cam_output in self.camera_node_outputs.items():
             if cam_output.observation is not None and isinstance(cam_output.observation, MediapipeObservation):
+                # logger.info("type is correct")
                 overlay_data[camera_id] = MediapipeOverlayData.from_mediapipe_observation(
+                    camera_id=camera_id,
+                    observation=cam_output.observation,
+                )
+        return overlay_data
+    
+
+    @property
+    def mediapipe_gpu_overlay_data(self) -> dict[CameraIdString, MediapipeGPUOverlayData]:
+        # logger.info("entered mediapipe_gpu_overlay_data")
+        overlay_data: dict[CameraIdString, MediapipeGPUOverlayData] = {}
+        for camera_id, cam_output in self.camera_node_outputs.items():
+            if cam_output.observation is not None and isinstance(cam_output.observation, MediapipeGPUObservation):
+                # logger.info("type is correct")
+                overlay_data[camera_id] = MediapipeGPUOverlayData.from_mediapipe_observation(
                     camera_id=camera_id,
                     observation=cam_output.observation,
                 )

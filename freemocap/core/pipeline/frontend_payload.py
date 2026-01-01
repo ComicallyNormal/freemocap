@@ -5,6 +5,8 @@ from skellycam.core.types.type_overloads import CameraIdString
 
 from freemocap.core.image_overlay.charuco_overlay_data import CharucoOverlayData
 from freemocap.core.image_overlay.mediapipe_overlay_data import MediapipeOverlayData
+from freemocap.core.image_overlay.mediapipe_gpu_overlay_data import MediapipeGPUOverlayData
+
 from freemocap.core.types.type_overloads import TrackedPointNameString
 from freemocap.pubsub.pubsub_topics import AggregationNodeOutputMessage
 from skellyforge.data_models.trajectory_3d import Point3d
@@ -12,7 +14,7 @@ from skellyforge.data_models.trajectory_3d import Point3d
 logger = logging.getLogger(__name__)
 
 # Union type for all possible overlay data types
-ObservationOverlayData = CharucoOverlayData | MediapipeOverlayData
+ObservationOverlayData = CharucoOverlayData | MediapipeOverlayData | MediapipeGPUOverlayData
 
 
 class FrontendPayload(BaseModel):
@@ -45,6 +47,9 @@ class FrontendPayload(BaseModel):
         if hasattr(aggregation_output, 'mediapipe_overlay_data'):
             observation_overlays.update(aggregation_output.mediapipe_overlay_data)
 
+        # Add mediapipe overlays if present
+        if hasattr(aggregation_output, 'mediapipe_gpu_overlay_data'):
+            observation_overlays.update(aggregation_output.mediapipe_gpu_overlay_data)
         # Add other overlay types as they're implemented
         # if hasattr(aggregation_output, 'rtmpose_overlay_data'):
         #     observation_overlays.update(aggregation_output.rtmpose_overlay_data)

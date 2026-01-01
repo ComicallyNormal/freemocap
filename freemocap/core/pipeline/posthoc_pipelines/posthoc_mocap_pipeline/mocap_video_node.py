@@ -5,7 +5,8 @@ from pathlib import Path
 import cv2
 
 from skellycam.core.types.type_overloads import WorkerType
-from skellytracker.trackers.mediapipe_tracker.mediapipe_detector import MediapipeDetector
+# from skellytracker.trackers.mediapipe_tracker.mediapipe_detector import MediapipeDetector
+from skellytracker.trackers.mediapipe_gpu_tracker.mediapipe_gpu_detector import MediapipeGPUDetector
 
 from freemocap.core.pipeline.pipeline_ipc import PipelineIPC
 from freemocap.core.pipeline.posthoc_pipelines.posthoc_mocap_pipeline.posthoc_mocap_pipeline import \
@@ -68,7 +69,7 @@ class MocapVideoNode:
         success, image = video_reader.read()
         frame_number = 0
         logger.info(f"Starting video processing node for video: {video_path.stem}")
-        mediapipe_detector = MediapipeDetector.create(config=mocap_task_config.detector_config)
+        mediapipe_detector = MediapipeGPUDetector.create(config=mocap_task_config.detector_config)
         try:
             while success and not shutdown_self_flag.value and ipc.should_continue:
                 mediapipe_observation = mediapipe_detector.detect(

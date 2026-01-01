@@ -94,6 +94,7 @@ class WebsocketServer:
             skipped_previous = False
             while self.should_continue:
                 await await_10ms()
+                # logger.info(f"CNXR: sending image")
                 frontend_payloads = self._app.get_latest_frontend_payloads(if_newer_than=self.last_sent_frame_number)
 
                 if self.check_frame_acknowledgment_status():
@@ -151,7 +152,7 @@ class WebsocketServer:
                     backpressure = self.last_sent_frame_number - self.last_received_frontend_confirmation
                     if (backpressure > BACKPRESSURE_WARNING_THRESHOLD and
                             backpressure % BACKPRESSURE_WARNING_THRESHOLD == 0):
-                        logger.trace(
+                        logger.info(
                             f"Backpressure detected: {backpressure} frames not acknowledged by frontend! "
                             f"Last sent frame: {self.last_sent_frame_number}, last received confirmation: "
                             f"{self.last_received_frontend_confirmation}")
