@@ -81,6 +81,16 @@ class FreemocApplication:
                 pipeline_config=pipeline_config)
         return pipeline
 
+
+    async def update_model_realtime_pipeline(self,
+                                                 pipeline_config: RealtimePipelineConfig) -> RealtimeProcessingPipeline:
+        pipeline = self.realtime_pipeline_manager.get_pipeline_by_camera_ids(
+            camera_ids=pipeline_config.camera_ids)
+        if pipeline is not None:
+            await self.realtime_pipeline_manager.update_model_of_pipeline(pipeline_config=pipeline_config)
+        return pipeline
+
+
     async def create_posthoc_calibration_pipeline(self,
                                                   recording_info: RecordingInfo,
                                                   calibration_pipeline_config:CalibrationpipelineConfig) -> RealtimeProcessingPipeline:

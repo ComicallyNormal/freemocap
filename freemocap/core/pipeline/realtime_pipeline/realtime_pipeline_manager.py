@@ -42,6 +42,8 @@ class RealtimePipelineManager:
                         f"Found existing pipeline with ID: {pipeline.id} for camera group ID: {pipeline.camera_group_id}")
                     await pipeline.update_camera_configs(camera_configs=pipeline_config.camera_configs)
                     return pipeline
+                else:
+                    logger.info("creating pipeline for the first time!")
             pipeline = RealtimeProcessingPipeline.from_config(pipeline_config=pipeline_config,
                                                               heartbeat_timestamp=self.heartbeat_timestamp,
                                                               camera_group=camera_group,
@@ -62,6 +64,18 @@ class RealtimePipelineManager:
                     await pipeline.update_camera_configs(camera_configs=pipeline_config.camera_configs)
                     return pipeline
         raise RuntimeError("No existing pipeline found for the provided camera configs.")
+    
+    async def update_model_of_pipeline(self,
+                                       pipeline_config: RealtimePipelineConfig) -> RealtimeProcessingPipeline:
+
+        with self.lock:
+            for pipeline in self.realtime_pipelines.values():
+                if set(pipeline.camera_ids) == set(pipeline_config.camera_ids):
+                    logger.info(
+                        f"Found existing pipeline with ID: {pipeline.id} for camera group ID: {pipeline.camera_group_id}")
+                    await pipeline.update_model_configs(task_config = pipeline_config.mocap_task_config)
+                    return pipeline
+        raise RuntimeError("Something went wrong with updating the model.")
 
     def close_all_realtime_pipelines(self):
         with self.lock:

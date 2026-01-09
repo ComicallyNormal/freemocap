@@ -107,7 +107,6 @@ export class OverlayManager {
         observation: CharucoObservation | MediapipeObservation | MediapipeGPUObservation | null
     ): Promise<ImageBitmap> {
         // Determine observation type
-        console.log(`Frame Update (processFrame)! ${new Date().toString()}`);
         
         const observationType = observation?.message_type as ObservationType;
 

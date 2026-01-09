@@ -26,7 +26,6 @@ export class FrameProcessor {
 
     public async processFramePayload(data: ArrayBuffer): Promise<ProcessedFrameResult | null> {
         try {
-            console.log('processFramePayload entered');
             const parsedFrames = await parseMultiFramePayload(data);
             if (!parsedFrames) {
                 console.warn('Failed to parse frame payload');
@@ -69,7 +68,6 @@ export class FrameProcessor {
     }
 
     public getFps(cameraId: string): number | null {
-        console.log("getFPS entered")
         return this.currentFps.get(cameraId) ?? null;
     }
 

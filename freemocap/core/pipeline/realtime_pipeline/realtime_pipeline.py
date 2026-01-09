@@ -3,6 +3,9 @@ import multiprocessing
 import time
 import uuid
 from dataclasses import dataclass
+from freemocap.core.pipeline.pipeline_configs import RealtimePipelineConfig
+from freemocap.core.pipeline.posthoc_pipelines.posthoc_mocap_pipeline.posthoc_mocap_pipeline import \
+    MocapPipelineTaskConfig
 
 from pydantic import BaseModel, ConfigDict
 from skellycam.core.camera.config.camera_config import CameraConfigs
@@ -20,8 +23,7 @@ from freemocap.core.pipeline.pipeline_ipc import PipelineIPC
 from freemocap.core.types.type_overloads import PipelineIdString, TopicSubscriptionQueue, FrameNumberInt
 from freemocap.pubsub.pubsub_topics import AggregationNodeOutputTopic, AggregationNodeOutputMessage, \
     PipelineConfigUpdateMessage, \
-    PipelineConfigUpdateTopic, ShouldCalibrateMessage, ShouldCalibrateTopic
-
+    PipelineConfigUpdateTopic, ShouldCalibrateMessage, ShouldCalibrateTopic, UpdateModelTopic,UpdateModelMessage
 logger = logging.getLogger(__name__)
 
 
@@ -146,6 +148,12 @@ class RealtimeProcessingPipeline:
 
     async def update_camera_configs(self, camera_configs: CameraConfigs) -> CameraConfigs:
         return await self.camera_group.update_camera_settings(requested_configs=camera_configs)
+    
+    #TODO: We are simplifying this config to be just an attribute for now but it should be extended
+    async def update_model_configs(self,task_config : MocapPipelineTaskConfig):
+        self.ipc.pubsub.topics[UpdateModelTopic].publish(
+            UpdateModelMessage(modelName=task_config.modelName))
+
 
     def get_latest_frontend_payload(self, if_newer_than: FrameNumberInt) -> tuple[bytes, FrontendPayload | None] | None:
         if not self.alive:

@@ -75,14 +75,33 @@ def triangulate_array(
     return triangulated3d_fr_id_xyz, reprojection_error, reprojection_error_by_camera
 
 
-#where did you come from cotton eyed joe?
+
+def is_data_valid(frame_number: int,
+                                   frame_observations_by_camera: FrameObservationsByCamera,
+                                   anipose_camera_group: AniposeCameraGroup,
+                                   config: TriangulationConfig=TriangulationConfig(),
+                                   calculate_reprojection_error: bool = False)->bool:
+    anipose_camera_group = subset_camera_names(data_dict=frame_observations_by_camera, anipose_camera_group=anipose_camera_group)
+
+    ordered_frame_observations = preserve_camera_group_order(data_by_camera=frame_observations_by_camera,
+                                                             camera_group=anipose_camera_group)
+
+    if not all([isinstance(obs, BaseObservation) for obs in ordered_frame_observations.values()]):
+        raise TypeError("All values in frame_observations_by_camera must be BaseObservation instances")
+    data2d_stack_list = [obs.to_2d_array() for obs in ordered_frame_observations.values()]
+    if not len(set(data.shape for data in data2d_stack_list)) == 1:
+        logger.error(f"2d data from each camera must be the same shape- got: {[data.shape for data in data2d_stack_list]}")
+
+        return False
+    return True
+    
+
 def triangulate_frame_observations(frame_number: int,
                                    frame_observations_by_camera: FrameObservationsByCamera,
                                    anipose_camera_group: AniposeCameraGroup,
                                    config: TriangulationConfig=TriangulationConfig(),
                                    calculate_reprojection_error: bool = False
                                    ) -> Observation3d:
-    # logger.info("triangulate_frame_observations entered") #1
     anipose_camera_group = subset_camera_names(data_dict=frame_observations_by_camera, anipose_camera_group=anipose_camera_group)
 
     ordered_frame_observations = preserve_camera_group_order(data_by_camera=frame_observations_by_camera,

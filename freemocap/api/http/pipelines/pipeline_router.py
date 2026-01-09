@@ -9,7 +9,7 @@ from skellycam.core.recorders.videos.recording_info import RecordingInfo
 from skellycam.core.types.type_overloads import CameraGroupIdString, CameraIdString
 
 from freemocap.app.freemocap_application import get_freemocap_app
-from freemocap.core.pipeline.pipeline_configs import RealtimePipelineConfig
+from freemocap.core.pipeline.pipeline_configs import RealtimePipelineConfig,MocapPipelineTaskConfig
 from freemocap.system.default_paths import default_recording_name, get_default_recording_folder_path
 
 logger = logging.getLogger(__name__)
@@ -62,6 +62,11 @@ class StartRecordingRequest(BaseModel):
         return str(Path(self.recording_directory) / self.recording_name)
 
 
+class PipelineUpdateModelRequest(BaseModel):
+    model_conf : MocapPipelineTaskConfig
+    pipeline_config : RealtimePipelineConfig
+
+
 @pipeline_router.post("/connect",
                       summary="Create a processing pipeline and attach it to a camera group"
                       )
@@ -85,6 +90,28 @@ async def pipeline_connect_endpoint(
         logger.exception(e)
         raise HTTPException(status_code=500,
                             detail=f"Error when processing `pipeline/connect` request: {type(e).__name__} - {e}")
+
+
+@pipeline_router.post("/updatemodel",
+                      summary="Update the currently used pose model"
+)
+async def pipeline_update_config_endpoint(
+        request: PipelineUpdateModelRequest = Body(...,
+                                               description="Request body containing desired model configuration",
+                                              )) -> PipelineCreateResponse: #does the request get instantiated on the fly?
+    logger.info(f"Received `pipeline/updatemodel` POST request - \n {request.model_dump_json(indent=2)}")
+    try:
+        pipeline_config = request.pipeline_config
+        pipeline = await get_freemocap_app().update_model_realtime_pipeline(pipeline_config=pipeline_config)
+        response = PipelineCreateResponse.from_pipeline(pipeline=pipeline)
+        logger.api(
+            f"`pipeline/updatemodel` POST request handled successfully - \n {response.model_dump_json(indent=2)}")
+        return response
+    except Exception as e:
+        logger.error(f"Error when processing `pipeline/updatemodel` request: {type(e).__name__} - {e}")
+        logger.exception(e)
+        raise HTTPException(status_code=500,
+                            detail=f"Error when processing `pipeline/updatemodel` request: {type(e).__name__} - {e}")
 
 
 @pipeline_router.delete("/all/close",

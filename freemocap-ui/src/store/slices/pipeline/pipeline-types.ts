@@ -13,12 +13,18 @@ export interface PipelineConnectResponse {
 }
 
 // ==================== Pipeline State ====================
+
+export interface PipelineModelConfig {
+    modelName: string;
+}
+
 export interface PipelineState {
     cameraGroupId: string | null;
     pipelineId: string | null;
     isConnected: boolean;
     isLoading: boolean;
     error: string | null;
+    config: PipelineModelConfig ;
 }
 
 

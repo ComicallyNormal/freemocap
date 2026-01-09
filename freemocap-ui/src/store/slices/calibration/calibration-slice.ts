@@ -66,7 +66,7 @@ export const calibrationSlice = createSlice({
     name: 'calibration',
     initialState,
     reducers: {
-        calibrationConfigUpdated: (state, action: PayloadAction<Partial<CalibrationConfig>>) => {
+        calibrationConfigUpdated: (state :CalibrationState, action: PayloadAction<Partial<CalibrationConfig>>) => {
             state.config = { ...state.config, ...action.payload };
         },
 

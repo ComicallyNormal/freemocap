@@ -177,7 +177,7 @@ export class MediapipeGPUOverlayRenderer extends BaseOverlayRenderer {
 
         // Draw frame info
         this.drawText(
-            `GPU MEDIAPIPE!!!! Frame: ${frame_number}`,
+            `GPU Accelerated Mediapipe, Frame: ${frame_number}`,
             10,
             25,
             14,

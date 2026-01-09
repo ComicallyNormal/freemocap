@@ -66,7 +66,6 @@ export class CanvasManager {
         bitmap: ImageBitmap,
         onRendered?: () => void
     ): boolean {
-        console.log(`Frame Update (sendFrameToWorker)! ${new Date().toString()}`);
         
         const workerInfo = this.workers.get(cameraId);
 

@@ -8,6 +8,8 @@ from skellycam.core.types.type_overloads import WorkerType
 # from skellytracker.trackers.mediapipe_tracker.mediapipe_detector import MediapipeDetector
 from skellytracker.trackers.mediapipe_gpu_tracker.mediapipe_gpu_detector import MediapipeGPUDetector
 
+from skellytracker.trackers.mediapipe_tracker.mediapipe_detector import MediapipeDetector
+
 from freemocap.core.pipeline.pipeline_ipc import PipelineIPC
 from freemocap.core.pipeline.posthoc_pipelines.posthoc_mocap_pipeline.posthoc_mocap_pipeline import \
     MocapPipelineTaskConfig
@@ -69,7 +71,10 @@ class MocapVideoNode:
         success, image = video_reader.read()
         frame_number = 0
         logger.info(f"Starting video processing node for video: {video_path.stem}")
-        mediapipe_detector = MediapipeGPUDetector.create(config=mocap_task_config.detector_config)
+        if(mocap_task_config.modelName == "gpu_accelerated"):
+            mediapipe_detector = MediapipeGPUDetector.create(config=mocap_task_config.detector_config)
+        else:
+            mediapipe_detector = MediapipeDetector.create()
         try:
             while success and not shutdown_self_flag.value and ipc.should_continue:
                 mediapipe_observation = mediapipe_detector.detect(

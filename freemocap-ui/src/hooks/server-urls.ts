@@ -40,6 +40,7 @@ class ServerUrls {
             pipelinePauseUnpause: `${baseUrl}/freemocap/pipeline/all/pause_unpause`,
             pipelineRecordStart: `${baseUrl}/freemocap/pipeline/all/record/start`,
             pipelineRecordStop: `${baseUrl}/freemocap/pipeline/all/record/stop`,
+            pipelineUpdateModel: `${baseUrl}/freemocap/pipeline/updatemodel`,
 
             // Calibration endpoints
             calibrationStartRecording: `${baseUrl}/freemocap/calibration/recording/start`,

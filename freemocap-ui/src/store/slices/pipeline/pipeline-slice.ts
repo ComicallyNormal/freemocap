@@ -1,6 +1,8 @@
-import {createSlice} from "@reduxjs/toolkit";
-import {PipelineState} from "@/store/slices/pipeline/pipeline-types";
-import {closePipeline, connectRealtimePipeline} from "@/store/slices/pipeline/pipeline-thunks";
+import {createSlice,PayloadAction} from "@reduxjs/toolkit";
+import {PipelineState,PipelineModelConfig} from "@/store/slices/pipeline/pipeline-types";
+import {closePipeline, connectRealtimePipeline, updatePipelineModelOnServer} from "@/store/slices/pipeline/pipeline-thunks";
+import {RootState} from '../../types';
+
 
 const initialState: PipelineState = {
     cameraGroupId: null,
@@ -8,6 +10,7 @@ const initialState: PipelineState = {
     isConnected: false,
     isLoading: false,
     error: null,
+    config: {modelName:"gpu_accelerated"}
 }
 
 export const pipelineSlice = createSlice({
@@ -21,7 +24,10 @@ export const pipelineSlice = createSlice({
             state.isConnected = false;
             state.isLoading = false;
             state.error = null;
-        }
+        },
+        pipelineConfigUpdated: (state : PipelineState, action: PayloadAction<Partial<PipelineModelConfig>>) => {
+            state.config = { ...state.config, ...action.payload };
+        },
     },
     extraReducers: (builder) => {
         builder
@@ -55,8 +61,26 @@ export const pipelineSlice = createSlice({
             .addCase(closePipeline.rejected, (state, action) => {
                 state.isLoading = false;
                 state.error = action.error.message || 'Failed to disconnect pipeline';
-            });
+            })
+                    // Update ML model pipeline
+         .addCase(updatePipelineModelOnServer.pending, (state) => {
+                state.isLoading = true;
+                state.error = null;
+            })
+        .addCase(updatePipelineModelOnServer.fulfilled, (state) => {
+            console.log("fulfilled")
+            console.log(state)
+            state.isLoading = false;
+        })
+        .addCase(updatePipelineModelOnServer.rejected, (state, action) => {
+            state.isLoading = false;
+            state.error = action.error.message || 'Failed to update pipeline model';
+        });
     },
 });
 
-export const {pipelineStateReset} = pipelineSlice.actions;
+//selectors
+export const selectPipelineConfig = (state: RootState) => state.pipeline.config;
+
+
+export const {pipelineStateReset,pipelineConfigUpdated} = pipelineSlice.actions;

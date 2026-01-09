@@ -28,6 +28,8 @@ class ProcessFrameNumberMessage(TopicMessageABC):
 class PipelineConfigUpdateMessage(TopicMessageABC):
     pipeline_config: RealtimePipelineConfig
 
+class UpdateModelMessage(TopicMessageABC):
+    modelName: str
 
 class CameraNodeOutputMessage(TopicMessageABC):
     camera_id: CameraIdString
@@ -118,6 +120,7 @@ class ShouldCalibrateMessage(TopicMessageABC):
 ProcessFrameNumberTopic = create_topic(ProcessFrameNumberMessage)
 ShouldCalibrateTopic = create_topic(ShouldCalibrateMessage)
 PipelineConfigUpdateTopic = create_topic(PipelineConfigUpdateMessage)
+UpdateModelTopic = create_topic(UpdateModelMessage)
 CameraNodeOutputTopic = create_topic(CameraNodeOutputMessage)
 VideoNodeOutputTopic = create_topic(VideoNodeOutputMessage)
 AggregationNodeOutputTopic = create_topic(AggregationNodeOutputMessage)

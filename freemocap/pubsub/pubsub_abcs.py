@@ -77,7 +77,7 @@ def create_topic(
     Uses Pydantic's create_model() to properly create the class.
     Returns a class (not instance) so it auto-registers via __init_subclass__.
     """
-    topic_name = message_type.__name__.replace('Message', 'Topic')
+    topic_name = message_type.__name__.replace('Message', 'Topic') 
 
     # Build field definitions for create_model
     # Format: field_name=(type, Field(...))

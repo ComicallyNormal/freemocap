@@ -16,7 +16,7 @@ from freemocap.core.pipeline.posthoc_pipelines.posthoc_calibration_pipeline.cali
 from freemocap.core.pipeline.posthoc_pipelines.posthoc_calibration_pipeline.calibration_helpers.freemocap_anipose import \
     AniposeCameraGroup
 from freemocap.core.pipeline.posthoc_pipelines.posthoc_mocap_pipeline.mocap_helpers.triangulate_trajectory_array import \
-    triangulate_frame_observations
+    triangulate_frame_observations,is_data_valid
 from freemocap.core.pipeline.realtime_pipeline.realtime_tasks.calibration_task.shared_view_accumulator import \
     SharedViewAccumulator
 from freemocap.core.types.type_overloads import Point3d, PipelineIdString
@@ -107,7 +107,7 @@ class RealtimeAggregationNode:
                 
                 # Check for updated Pipeline Config
                 while not pipeline_config_subscription.empty():
-                    pipeline_config_message: PipelineConfigUpdateMessage = pipeline_config_subscription.get()
+                    pipeline_config_message: PipelineConfigUpdateMessage = pipeline_config_subscription.get()#NOTE THIS
                     config = pipeline_config_message.pipeline_config
                     logger.info(f"AggregationNode for camera group {camera_group_id} received updated config")
 
@@ -140,24 +140,31 @@ class RealtimeAggregationNode:
                     #     camera_node_output_by_camera=camera_node_outputs,
                     #     multi_frame_number=latest_requested_frame)
 
-                    
-                    triangulated = triangulate_frame_observations(frame_number=latest_requested_frame,
-                                                                  frame_observations_by_camera={camera_id: camera_node_outputs[camera_id].observation
-                                                     for camera_id in camera_node_outputs.keys()},
-                                                                  anipose_camera_group=anipose_camera_group,
-                                                                  )
-                        # tracked_points3d=triangulated.to_point_dictionary()
+                    data_is_valid = is_data_valid(frame_number=latest_requested_frame,
+                                                                    frame_observations_by_camera={camera_id: camera_node_outputs[camera_id].observation
+                                                        for camera_id in camera_node_outputs.keys()},
+                                                                    anipose_camera_group=anipose_camera_group,)
+                    if(data_is_valid):
 
-                    aggregation_output: AggregationNodeOutputMessage = AggregationNodeOutputMessage(
-                        frame_number=latest_requested_frame,
-                        pipeline_id=ipc.pipeline_id,
-                        camera_group_id=camera_group_id,
-                        pipeline_config=config,
-                        camera_node_outputs=camera_node_outputs,
-                        tracked_points3d=triangulated.to_point_dictionary()
-                    )
-                    ipc.pubsub.topics[AggregationNodeOutputTopic].publish(aggregation_output)
-                    camera_node_outputs = {camera_id: None for camera_id in camera_node_outputs.keys()}
+                        triangulated = triangulate_frame_observations(frame_number=latest_requested_frame,
+                                                                    frame_observations_by_camera={camera_id: camera_node_outputs[camera_id].observation
+                                                        for camera_id in camera_node_outputs.keys()},
+                                                                    anipose_camera_group=anipose_camera_group,
+                                                                    )
+
+                        aggregation_output: AggregationNodeOutputMessage = AggregationNodeOutputMessage(
+                            frame_number=latest_requested_frame,
+                            pipeline_id=ipc.pipeline_id,
+                            camera_group_id=camera_group_id,
+                            pipeline_config=config,
+                            camera_node_outputs=camera_node_outputs,
+                            tracked_points3d=triangulated.to_point_dictionary()
+                        )
+                        ipc.pubsub.topics[AggregationNodeOutputTopic].publish(aggregation_output)
+                        camera_node_outputs = {camera_id: None for camera_id in camera_node_outputs.keys()}
+                    else:
+                        pass
+                        logger.error("invalid data, skipping frame")
 
 
         except Exception as e:

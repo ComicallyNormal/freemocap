@@ -32,3 +32,7 @@ export const selectCanDisconnectPipeline = createSelector(
     (isConnected, isLoading) => isConnected && !isLoading
 );
 
+export const selectCanSetModelPipeline = createSelector(
+    [selectIsPipelineConnected, selectIsPipelineLoading],
+    (isConnected, isLoading) => isConnected && !isLoading
+);

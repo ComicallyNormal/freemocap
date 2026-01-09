@@ -12,14 +12,14 @@ from skellycam.core.types.type_overloads import CameraIdString, WorkerType, Topi
 from skellycam.utilities.wait_functions import wait_1ms
 from skellytracker.trackers.charuco_tracker.charuco_detector import CharucoDetector
 
-#from skellytracker.trackers.mediapipe_tracker.mediapipe_detector import MediapipeDetector
+from skellytracker.trackers.mediapipe_tracker.mediapipe_detector import MediapipeDetector
 from skellytracker.trackers.mediapipe_gpu_tracker.mediapipe_gpu_detector import MediapipeGPUDetector
 
 from freemocap.core.pipeline.pipeline_configs import RealtimePipelineConfig
 from freemocap.core.pipeline.pipeline_ipc import PipelineIPC
 from freemocap.core.types.type_overloads import PipelineIdString
 from freemocap.pubsub.pubsub_topics import ProcessFrameNumberTopic, PipelineConfigUpdateTopic, CameraNodeOutputTopic, \
-    PipelineConfigUpdateMessage, ProcessFrameNumberMessage, CameraNodeOutputMessage
+    PipelineConfigUpdateMessage, ProcessFrameNumberMessage, CameraNodeOutputMessage,UpdateModelMessage, UpdateModelTopic
 
 logger = logging.getLogger(__name__)
 
@@ -61,6 +61,8 @@ class RealtimeCameraNode:
                                                          ProcessFrameNumberTopic),
                                                      pipeline_config_subscription=ipc.pubsub.get_subscription(
                                                          PipelineConfigUpdateTopic),
+                                                     pipeline_model_subscription=ipc.pubsub.get_subscription(
+                                                          UpdateModelTopic),                                        
                                                      ),
                                          )
         subprocess_registry.append(worker)
@@ -75,6 +77,7 @@ class RealtimeCameraNode:
              config: RealtimePipelineConfig,
              process_frame_number_subscription: TopicSubscriptionQueue,
              pipeline_config_subscription: TopicSubscriptionQueue,
+             pipeline_model_subscription:TopicSubscriptionQueue,
              shutdown_self_flag: multiprocessing.Value,
              camera_shm_dto: SharedMemoryRingBufferDTO,
              ):
@@ -84,22 +87,45 @@ class RealtimeCameraNode:
             from freemocap import LOG_LEVEL
             configure_logging(LOG_LEVEL, ws_queue=ipc.ws_queue)
 
-        logger.debug(f"Initializing camera processing node for camera {camera_id} - creating shared memory ring buffer")
+        logger.info(f"Initializing camera processing node for camera {camera_id} - creating shared memory ring buffer")
+        logger.info(f"Model Name: {config.mocap_task_config.modelName}")
+
         camera_shm = CameraSharedMemoryRingBuffer.recreate(dto=camera_shm_dto,
                                                            read_only=False)
         charuco_detector = CharucoDetector.create(config=config.calibration_task_config.detector_config)
-        mediapipe_detector = MediapipeGPUDetector.create()
+          
+
+        if(config.mocap_task_config.modelName == "gpu_accelerated"):
+            mediapipe_detector = MediapipeGPUDetector.create()
+        else:
+            mediapipe_detector = MediapipeDetector.create()
+        
         try:
-            logger.trace(f"Starting camera processing node for camera {camera_id}")
+            logger.info(f"Run initialization complete, Starting camera processing node for camera {camera_id}")
             frame_rec_array: np.recarray | None = None
             while ipc.should_continue and not shutdown_self_flag.value:
                 wait_1ms()
                 # Check trackers config updates
                 while not pipeline_config_subscription.empty():
                     new_pipeline_config_message: PipelineConfigUpdateMessage = pipeline_config_subscription.get()
-                    logger.debug(f"Received new skelly trackers for camera {camera_id}: {new_pipeline_config_message}")
                     config = new_pipeline_config_message.pipeline_config
+  
 
+                model_msg : UpdateModelMessage = None
+                while(not pipeline_model_subscription.empty()):
+                    model_msg = pipeline_model_subscription.get(timeout=0.0001)
+
+                if(model_msg!=None):
+                    logger.info(f"SUBSCRIPTION: {model_msg} on camera: {camera_id} with value {model_msg.modelName}")
+
+                    if(model_msg.modelName == "gpu_accelerated"):
+                        logger.info("switching to gpu model")
+                        mediapipe_detector = MediapipeGPUDetector.create()
+                    else:
+                        logger.info("switching to holistic model")
+                        mediapipe_detector = MediapipeDetector.create()
+
+                                        
                 # Check for new frame to process
                 if not process_frame_number_subscription.empty():
                     process_frame_number_message: ProcessFrameNumberMessage = process_frame_number_subscription.get()
