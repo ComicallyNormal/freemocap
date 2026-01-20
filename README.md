@@ -200,3 +200,35 @@ If the AGPL does not work for your needs, we are happy to discuss terms to licen
 agreement at a price point that increases exponentially as you
 move [spiritually](https://www.gnu.org/philosophy/open-source-misses-the-point.en.html) away from the `AGPL`
 
+
+## Building the realtime GPU application.
+
+## We need opencv 
+clone opencv
+
+## We need python 3.11, we can do this through uv or miniconda.
+
+with miniconda we can use this to create a specific python version env using
+conda create --name freemocap python=3.11
+
+
+## Now we can pipe the following into the cmake-gui of the opencv
+replace home/alexmini with your home path
+PYTHON3_INCLUDE_PATH=/home/alexmini/miniconda3/envs/freemocap-env/include/python3.11;/usr/include
+PYTHON3_LIBRARY=/home/alexmini/miniconda3/envs/freemocap-env/lib/libpython3.11.so
+PYTHON3_NUMPY_INCLUDE_DIRS= /home/alexmini/miniconda3/envs/freemocap-env/lib/python3.11/site-packages/numpy/core/include
+PYTHON_DEFAULT_EXECUTABLE=/home/alexmini/miniconda3/envs/freemocap-env/bin/python3
+PYTHON3_EXECUTABLE=/home/alexmini/miniconda3/envs/freemocap-env/bin/python3
+BUILD_opencv_python3=ON
+OPENCV_PYTHON_INSTALL_PATH=/home/alexmini/miniconda3/envs/freemocap-env/lib/python3.11/site-packages
+OPENCV_EXTRA_MODULES_PATH=/home/alexmini/Documents/Projects/opencv_contrib/modules
+LIBGTK-2.0 enabled (Skellytracker support, not always needed but sometimes is!!)
+
+Note your PYTHON3_NUMPY_INCLUDE_DIRS may differ per device
+
+## configure and generate. Then run make -j8
+
+## opencv should now be installed
+make sure cv2 is a dependency in the site-packages of freemocap
+Make sure skelly tracker is copied to the site packages as well.
+

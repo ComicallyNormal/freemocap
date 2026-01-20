@@ -8,7 +8,7 @@ from skellyforge.post_processing.filters.filter_config import FilterConfig
 from skellyforge.post_processing.interpolation.apply_interpolation import interpolate_trajectory
 from skellyforge.post_processing.interpolation.interpolation_config import InterpolationConfig
 from skellyforge.skellymodels.managers.human import Human
-from skellyforge.skellymodels.models.tracking_model_info import MediapipeModelInfo
+from skellyforge.skellymodels.models.tracking_model_info import MediapipeModelInfo,MediapipeGPUModelInfo
 from skellytracker.trackers.base_tracker.base_tracker_abcs import BaseRecorder
 
 from freemocap.core.pipeline.posthoc_pipelines.posthoc_calibration_pipeline.calibration_helpers.freemocap_anipose import \
@@ -48,7 +48,7 @@ def skeleton_from_mediapipe_observation_recorders(observation_recorders:dict[Vid
 
     camera_group=AniposeCameraGroup.load(str(path_to_calibration_toml))
 
-    raw_trajectory_3d: Trajectory3d = triangulate_dict(
+    raw_trajectory_3d: Trajectory3d = triangulate_dict( #does the error come from here?
         data2d_fr_mar_xy_by_camera=data2d_by_video,
         camera_group=camera_group,
         config=triangulation_config,
@@ -67,9 +67,12 @@ def skeleton_from_mediapipe_observation_recorders(observation_recorders:dict[Vid
     skeleton: Human = Human.from_tracked_points_numpy_array(
         # name/model info are hardcoded - but ideally we'll make a some sort of config that we'll pull from to choose these
         name="human",
-        model_info=MediapipeModelInfo(),
+        model_info=MediapipeGPUModelInfo(),
         tracked_points_numpy_array=filtered_trajectory_3d.triangulated_data,
     )
+
+    # ObservationTriangulator()
+    #error = triangulate_observations()
 
     try:
         skeleton.put_skeleton_on_ground()
@@ -83,10 +86,25 @@ def skeleton_from_mediapipe_observation_recorders(observation_recorders:dict[Vid
 
     skeleton.calculate()
 
+    #note, seems like the folder isn't outputting
+    print("********************reprojection array")
+    print(raw_trajectory_3d.reprojection_error.shape)
+    error_data = raw_trajectory_3d.reprojection_error
+    print(error_data)
+
     skeleton.save_out_numpy_data(path_to_output_data_folder)
     skeleton.save_out_csv_data(path_to_output_data_folder)
     skeleton.save_out_all_data_csv(path_to_output_data_folder)
     skeleton.save_out_all_data_parquet(path_to_output_data_folder)
     skeleton.save_out_all_xyz_numpy_data(path_to_output_data_folder)
-
+    save_reprojection_data(path_to_output_data_folder=path_to_output_data_folder,error_data=error_data)
     return skeleton
+
+def save_reprojection_data(path_to_output_data_folder,error_data):
+        """
+        Saves out a single .npy file with error data
+        """
+        print("saving error data")
+        save_path = path_to_output_data_folder/f"error_manual.npy"
+        np.save(save_path, error_data)
+        logger.info(f"Combined marker position numpy array saved to f{save_path}")

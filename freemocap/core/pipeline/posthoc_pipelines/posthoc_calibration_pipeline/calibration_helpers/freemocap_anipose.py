@@ -1656,7 +1656,7 @@ class AniposeCameraGroup:
 
         c = np.isfinite(p3ds[:, :, 0])
         if np.sum(c) < 20:
-            print("warning: not enough 3D points to calculate_center_of_mass optimization")
+            print("*****************warning: not enough 3D points to calculate_center_of_mass optimization*********************")
             return p3ds
 
         return self.optim_points(points, p3ds, **kwargs)
@@ -2027,6 +2027,7 @@ class AniposeCameraGroup:
         # Log observation statistics per camera
         logger.info(f"Calibrating {n_cameras} cameras")
         for cam_idx, (rows, camera) in enumerate(zip(all_rows, self.cameras)):
+            
             logger.info(f"Camera {cam_idx} ({camera.get_name()}): {len(rows)} frames with detections")
 
             size = camera.get_size()

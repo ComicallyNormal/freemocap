@@ -21,7 +21,7 @@ def triangulate_array(
         data2d_cam_id_xy: np.ndarray,  # shape: cameras × frames × points × 2
         camera_group: AniposeCameraGroup,
         config: TriangulationConfig,
-        calculate_reprojection_error: bool = False,
+        calculate_reprojection_error: bool = True,
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     number_of_cameras = data2d_cam_id_xy.shape[0]
     number_of_frames = data2d_cam_id_xy.shape[1]
@@ -57,12 +57,13 @@ def triangulate_array(
     if not calculate_reprojection_error:
         return triangulated3d_fr_id_xyz, np.array([]), np.array([])
     # Calculate reprojection errors
-    reprojection_error_full = camera_group.reprojection_error(
+    reprojection_error_full = camera_group.reprojection_error( #okat this gets us where we want
         triangulated_data_flat, data2d_flat
     )
-    reprojection_error_flat = camera_group.calculate_mean_reprojection_error(
+    reprojection_error_flat = camera_group.calculate_mean_reprojection_error( #HUH
         reprojection_error_full
     )
+    # print("flat ",reprojection_error_flat)
 
     # Reshape reprojection errors
     reprojection_error_by_camera = np.linalg.norm(
@@ -71,6 +72,8 @@ def triangulate_array(
     reprojection_error = reprojection_error_flat.reshape(
         number_of_frames, number_of_tracked_points
     )
+
+    # print("error by camera ",reprojection_error_by_camera)
 
     return triangulated3d_fr_id_xyz, reprojection_error, reprojection_error_by_camera
 
@@ -131,7 +134,7 @@ def triangulate_frame_observations(frame_number: int,
         # print(cam, arr.shape)
 
     data2d_cam_fr_id_xyz = data2d_cam_id_xy.reshape((data2d_cam_id_xy.shape[0], 1, data2d_cam_id_xy.shape[1], data2d_cam_id_xy.shape[2]))
-    triangulated_data, _, _ = triangulate_array(
+    triangulated_data, repoj_error, _ = triangulate_array(
         data2d_cam_id_xy=data2d_cam_fr_id_xyz,
         camera_group=anipose_camera_group,
         config=config,
@@ -141,7 +144,7 @@ def triangulate_frame_observations(frame_number: int,
         frame_number=frame_number,
         triangulated_data=np.squeeze(triangulated_data),
         names=list(frame_observations_by_camera.values())[0].to_tracked_points().keys(),
-        # reprojection_error=reprojection_error,
+        reprojection_error=repoj_error,
         # reprojection_error_by_camera=reprojection_error_by_camera,
     )
 
@@ -244,7 +247,7 @@ def triangulate_dict(
     data2d_camera_fr_mar_xy = np.stack(stacked_2d_data_list,axis=0)
     # logger.info(f"shape of combined_2d_data: {data2d_camera_fr_mar_xy.shape}")
 
-    triangulated_data, reprojection_error, reprojection_error_by_camera = triangulate_array(
+    triangulated_data, reprojection_error, reprojection_error_by_camera = triangulate_array( #What is the difference between this triangulation and the other
         data2d_camera_fr_mar_xy, camera_group, config
     )
     if start_frame is None:

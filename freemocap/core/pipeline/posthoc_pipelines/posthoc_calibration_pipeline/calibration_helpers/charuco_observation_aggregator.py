@@ -54,6 +54,9 @@ class CharucoObservationAggregator(BaseModel):
     def from_charuco_observation_payload(cls,
                                          charuco_observations_by_camera: CharucoObservations,
                                          anipose_camera_ordering: list[CameraIdString]):
+        logger.info("entered from_charuco_observation_payload")
+        logger.info( set(charuco_observations_by_camera.keys())) #0,1,2
+        logger.info(set(anipose_camera_ordering)) #0,4,2
         if set(charuco_observations_by_camera.keys()) != set(anipose_camera_ordering):
             raise ValueError("individual_camera_rows and anipose_camera_ordering must have the same camera ids")
         camera_rows = {}
@@ -64,7 +67,7 @@ class CharucoObservationAggregator(BaseModel):
             anipose_camera_row = charuco_observation.to_anipose_camera_row()
             if anipose_camera_row is None:
                 raise ValueError("Cannot create CharucoObservationAggregator from payload with None observations - should use nan-filled CharucoObservation instead")
-            camera_rows[camera_id] = [anipose_camera_row]
+            camera_rows[camera_id] = [anipose_camera_row] #[id:0 -> [all_video_anipose_rows]]
 
         return cls(individual_camera_rows=camera_rows, anipose_camera_ordering=anipose_camera_ordering)
 
@@ -104,6 +107,8 @@ def anipose_calibration_from_charuco_observations(
                       size=(video_metadata.height, video_metadata.width)) for video_id, video_metadata in
         video_metadata.items()
     ]
+    for video_id in video_metadata.items():
+        logger.info(f"video_id is: {video_id}")
     anipose_camera_group = AniposeCameraGroup(cameras=anipose_cameras)
 
     anipose_charuco_board = AniposeCharucoBoard(squaresX=calibration_pipeline_config.charuco_board_x_squares,

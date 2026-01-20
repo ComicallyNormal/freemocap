@@ -6,7 +6,7 @@ from skellyforge.post_processing.filters.apply_filter import filter_trajectory
 from skellyforge.post_processing.filters.filter_config import FilterConfig
 from skellyforge.post_processing.interpolation.apply_interpolation import interpolate_trajectory
 from skellyforge.post_processing.interpolation.interpolation_config import InterpolationConfig
-from skellyforge.skellymodels.models.tracking_model_info import MediapipeModelInfo, CharucoBoard5x3ModelInfo
+from skellyforge.skellymodels.models.tracking_model_info import MediapipeModelInfo, MediapipeGPUModelInfo,CharucoBoard5x3ModelInfo
 from skellyforge.skellymodels.managers.board import Board
 from skellyforge.data_models.trajectory_3d import Trajectory3d
 

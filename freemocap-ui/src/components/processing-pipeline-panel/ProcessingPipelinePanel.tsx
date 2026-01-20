@@ -6,7 +6,6 @@ import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import LanIcon from '@mui/icons-material/Lan';
 import PipelineConnectionStatus from "@/components/processing-pipeline-panel/PipelineConnectionStatus";
-import {RecordingInfoPanel} from "@/components/recording-info-panel/RecordingInfoPanel";
 import {useAppDispatch, useAppSelector} from "@/store/hooks";
 
 import {

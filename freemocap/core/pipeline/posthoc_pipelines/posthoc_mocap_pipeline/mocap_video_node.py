@@ -67,7 +67,29 @@ class MocapVideoNode:
             from freemocap import LOG_LEVEL
             configure_logging(LOG_LEVEL, ws_queue=ipc.ws_queue)
 
-        video_reader = cv2.VideoCapture(str(video_path))
+
+        logger.info("video path for capture is: "+ str(video_path))
+        video_reader = None
+        if str(video_path).endswith("mp4"):
+            logger.info("video file")
+            video_reader = cv2.VideoCapture(str(video_path))
+        else:
+            logger.info("video capture")
+            device = str(video_path)
+            logger.info(f"trying to go to path: {video_path}")
+            pipeline = (
+            f"v4l2src device={device} ! "
+            "image/jpeg,width={w},height={h},framerate={fps}/1 ! "
+            "jpegdec ! videoconvert ! appsink drop=true sync=false"
+            )        
+            
+            video_reader = cv2.VideoCapture(pipeline,cv2.CAP_GSTREAMER)
+
+            # video_reader = cv2.VideoCapture(str(video_path),cv2.CAP_V4L2)
+
+
+     
+
         success, image = video_reader.read()
         frame_number = 0
         logger.info(f"Starting video processing node for video: {video_path.stem}")

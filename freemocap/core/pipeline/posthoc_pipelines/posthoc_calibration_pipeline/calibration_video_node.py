@@ -76,8 +76,9 @@ class CalibrationVideoNode:
             configure_logging(LOG_LEVEL, ws_queue=ipc.ws_queue)
 
         logger.info(f"Starting video processing node for video: {video_path.stem}")
-
         video_reader = cv2.VideoCapture(str(video_path))
+
+
         success, image = video_reader.read()
         frame_number = 0
         charuco_detector = CharucoDetector.create(config=calibration_pipeline_config.detector_config)

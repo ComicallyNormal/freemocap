@@ -103,7 +103,7 @@ class MocapAggregationProcessNode(RealtimeAggregationNode):
 
                     points3d.update({f"Cam{camera_id}.{name}": tuple(point_xyz) for name, point_xyz in
                                      camera_node_output.mediapipe_observation.all_points(dimensions=3,
-                                                                                         scale_by=0.001).items()})
+                                                                                         scale_by=0.001).items()}) #note the scale by
 
                 output = MocapPipelineOutputData(camera_node_output=camera_node_incoming_data,  # type: ignore
                                                  aggregation_layer_output=MocapAggregationLayerOutputData(

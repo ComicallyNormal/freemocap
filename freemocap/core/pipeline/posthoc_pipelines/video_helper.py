@@ -157,6 +157,67 @@ class VideoHelper(BaseModel):
             metadata=metadata,
             cache=cache
         )
+    
+
+    @classmethod
+    def from_passed_metadata(
+        cls,
+        video_path: Path,
+        width: int,
+        height: int,
+        fps :int,
+        frame_count:int,
+        fourcc_code :int,
+        *,
+        cache_size_mb: int = DEFAULT_CACHE_SIZE_MB
+    ) -> "VideoHelper":
+        """
+        Create a VideoHelper instance USING PASSED METADATA.
+        Args:
+        """
+        if not video_path.exists():
+            raise FileNotFoundError(f"Video file not found: {video_path}")
+
+        # Open video capture
+        video_reader = cv2.VideoCapture(str(video_path))
+        if not video_reader.isOpened():
+            raise RuntimeError(f"Failed to open video file: {video_path}")
+
+        # Extract metadata
+        # width = int(video_reader.get(cv2.CAP_PROP_FRAME_WIDTH))
+        # height = int(video_reader.get(cv2.CAP_PROP_FRAME_HEIGHT))
+        # fps = video_reader.get(cv2.CAP_PROP_FPS)
+        # frame_count = int(video_reader.get(cv2.CAP_PROP_FRAME_COUNT))
+        # fourcc_code = int(video_reader.get(cv2.CAP_PROP_FOURCC))
+
+        # Convert fourcc to string
+        fourcc = "".join([chr((fourcc_code >> 8 * i) & 0xFF) for i in range(4)])
+
+        # Calculate duration
+        duration_seconds = frame_count / fps if fps > 0 else 0.0
+
+        metadata = VideoMetadata(
+            width=width,
+            height=height,
+            fps=fps,
+            frame_count=frame_count,
+            fourcc=fourcc,
+            duration_seconds=duration_seconds
+        )
+
+        # Create cache
+        cache = FrameCache(max_size_mb=cache_size_mb)
+
+        return cls(
+            video_path=video_path,
+            video_reader=video_reader,
+            metadata=metadata,
+            cache=cache
+        )
+
+
+
+
 
     def read_next_frame(self) -> np.ndarray| None:
         """

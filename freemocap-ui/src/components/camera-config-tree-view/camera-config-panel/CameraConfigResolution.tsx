@@ -28,6 +28,7 @@ export const CameraConfigResolution: React.FC<CameraConfigResolutionProps> = ({
                 sx={{ color: theme.palette.text.primary }}
             >
                 <MenuItem value="640x480">640 x 480</MenuItem>
+                <MenuItem value="960x720">960 x 720</MenuItem>
                 <MenuItem value="1280x720">1280 x 720</MenuItem>
                 <MenuItem value="1920x1080">1920 x 1080</MenuItem>
             </Select>

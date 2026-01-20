@@ -123,8 +123,8 @@ class PosthocMocapAggregationNode:
                         video_node_output_message.video_id] = video_node_output_message
                     if all([isinstance(value, VideoNodeOutputMessage) for value in
                             video_outputs_by_frame[video_node_output_message.frame_number].values()]):
-                        logger.info(
-                            f"Received all video node outputs for frame {video_node_output_message.frame_number} in pipeline {pipeline_id}")
+                        # logger.info(
+                        #     f"Received all video node outputs for frame {video_node_output_message.frame_number} in pipeline {pipeline_id}")
                         got_all_outputs_by_frame[video_node_output_message.frame_number] = True
 
                 if all(list(got_all_outputs_by_frame.values())):
@@ -143,7 +143,7 @@ class PosthocMocapAggregationNode:
                 observation_recorders=observation_recorders_by_video,
                 path_to_calibration_toml= get_last_successful_calibration_toml_path(),
                 path_to_output_data_folder=Path(recording_info.full_recording_path)/'output_data',
-            )
+            )#Can Pipe out human now
 
             logger.success(
                 f"Posthoc calibration completed for pipeline {pipeline_id}! Mocap file saved to {recording_info.full_recording_path}")
