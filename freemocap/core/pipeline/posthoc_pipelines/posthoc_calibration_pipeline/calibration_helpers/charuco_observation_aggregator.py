@@ -97,7 +97,7 @@ def anipose_calibration_from_charuco_observations(
         video_metadata: dict[VideoIdString, VideoMetadata],
         recording_info: RecordingInfo,
         pin_camera_0_to_origin: bool = True,
-        use_charuco_as_groundplane: bool = True,
+        use_charuco_as_groundplane: bool = False,
         init_intrinsics: bool = True,
         init_extrinsics: bool = True,
         verbose: bool = True, ) -> Path:
@@ -107,8 +107,6 @@ def anipose_calibration_from_charuco_observations(
                       size=(video_metadata.height, video_metadata.width)) for video_id, video_metadata in
         video_metadata.items()
     ]
-    for video_id in video_metadata.items():
-        logger.info(f"video_id is: {video_id}")
     anipose_camera_group = AniposeCameraGroup(cameras=anipose_cameras)
 
     anipose_charuco_board = AniposeCharucoBoard(squaresX=calibration_pipeline_config.charuco_board_x_squares,

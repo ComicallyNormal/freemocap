@@ -93,10 +93,7 @@ class WebsocketServer:
         try:
             skipped_previous = False
             while self.should_continue:
-                await await_10ms()
-                # logger.info(f"CNXR: sending image")
-                frontend_payloads = self._app.get_latest_frontend_payloads(if_newer_than=self.last_sent_frame_number)
-
+                await async_wait_10ms()
                 if self.check_frame_acknowledgment_status():
                     if skipped_previous:  # skip an extra frame if there was backpressure from frontend
                         skipped_previous = False
@@ -150,13 +147,23 @@ class WebsocketServer:
                 else:
                     skipped_previous = True
                     backpressure = self.last_sent_frame_number - self.last_received_frontend_confirmation
-                    if (backpressure > BACKPRESSURE_WARNING_THRESHOLD and
-                            backpressure % BACKPRESSURE_WARNING_THRESHOLD == 0):
-                        logger.info(
-                            f"Backpressure detected: {backpressure} frames not acknowledged by frontend! "
-                            f"Last sent frame: {self.last_sent_frame_number}, last received confirmation: "
-                            f"{self.last_received_frontend_confirmation}")
+                    if backpressure > BACKPRESSURE_WARNING_THRESHOLD:
+                        logger.trace(
+                            f"Backpressure detected: {backpressure} frames not acknowledged by frontend! Last sent frame: {self.last_sent_frame_number}, last received confirmation: {self.last_received_frontend_confirmation}")
 
+                backend_framerate_updates:dict[CameraGroupIdString,CurrentFramerate] = self._app.skellycam_app.camera_group_manager.get_backend_framerate_updates()
+                if backend_framerate_updates:
+                    for camera_group_id, backend_framerate in backend_framerate_updates.items():
+                        if camera_group_id not in self._frontend_framerate_trackers:
+                            continue
+                        framerate_message = {
+                            "message_type": "framerate_update",
+                            "camera_group_id": camera_group_id,
+                            "backend_framerate": backend_framerate.model_dump(),
+                            "frontend_framerate": self._frontend_framerate_trackers[camera_group_id].current_framerate.model_dump()
+                        }
+                        await self.websocket.send_json(framerate_message)
+                        self._frontend_framerate_trackers[camera_group_id].clear()
         except WebSocketDisconnect:
             logger.api("Client disconnected, ending Frontend Image relay task...")
         except asyncio.CancelledError:

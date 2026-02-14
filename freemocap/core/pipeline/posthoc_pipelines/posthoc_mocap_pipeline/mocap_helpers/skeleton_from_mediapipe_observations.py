@@ -48,7 +48,7 @@ def skeleton_from_mediapipe_observation_recorders(observation_recorders:dict[Vid
 
     camera_group=AniposeCameraGroup.load(str(path_to_calibration_toml))
 
-    raw_trajectory_3d: Trajectory3d = triangulate_dict( #does the error come from here?
+    raw_trajectory_3d: Trajectory3d = triangulate_dict(
         data2d_fr_mar_xy_by_camera=data2d_by_video,
         camera_group=camera_group,
         config=triangulation_config,
@@ -67,7 +67,7 @@ def skeleton_from_mediapipe_observation_recorders(observation_recorders:dict[Vid
     skeleton: Human = Human.from_tracked_points_numpy_array(
         # name/model info are hardcoded - but ideally we'll make a some sort of config that we'll pull from to choose these
         name="human",
-        model_info=MediapipeGPUModelInfo(),
+        model_info=MediapipeGPUModelInfo(), #Note GPU
         tracked_points_numpy_array=filtered_trajectory_3d.triangulated_data,
     )
 

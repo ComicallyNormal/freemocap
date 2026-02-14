@@ -100,7 +100,7 @@ class RealtimeAggregationNode:
             configure_logging(LOG_LEVEL, ws_queue=ipc.ws_queue)
 
         logger.debug("AggregationNode  - starting main loop")
-        try:            
+        try:
             logger.debug(f"Starting aggregation process for camera group {camera_group_id}")
             camera_node_outputs: dict[CameraIdString, CameraNodeOutputMessage | None] = {camera_id: None for camera_id
                                                                                          in

@@ -371,7 +371,3 @@ class PosthocCalibrationAggregationNode:
         logger.debug(f"Stopping PosthocAggregationNode worker")
         self.shutdown_self_flag.value = True
         self.worker.join()
-
-
-
-

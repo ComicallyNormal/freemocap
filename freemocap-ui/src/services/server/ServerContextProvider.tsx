@@ -107,6 +107,7 @@ function isMediapipeGPUOverlayDataMessage(data: any): data is MediapipeGPUOverla
 }
 
 function handleModelInfoUpdate(modelInfo: ModelInfo): void {
+    console.log(`Received model info for tracker: ${modelInfo.tracker_name}`);
     OverlayRendererFactory.setModelInfo(modelInfo.tracker_name, modelInfo);
 }
 
@@ -261,12 +262,7 @@ export const ServerContextProvider: React.FC<{ children: ReactNode }> = ({childr
                         for (const [cameraId, observation] of Object.entries(jsonData)) {
                             latestObservationsRef.current.set(cameraId, observation);
                         }
-                    }
-                    else if (isMediapipeGPUOverlayDataMessage(jsonData)) {
-                        for (const [cameraId, observation] of Object.entries(jsonData)) {
-                            latestObservationsRef.current.set(cameraId, observation);
-                        }
-                    }             
+                    }            
 
                     else if ('model_info' in jsonData && jsonData.model_info) {
                         // Handle model info updates
@@ -274,6 +270,7 @@ export const ServerContextProvider: React.FC<{ children: ReactNode }> = ({childr
                     }
                     else if ('tracked_points3d' in jsonData) {
                         // Handle 3D tracked points
+                        console.log(`Received 3d data - ${JSON.stringify(jsonData.tracked_points3d)}`);
                         latestTrackedPoints.current = new Map(Object.entries(jsonData.tracked_points3d));
 
                         for (const subscriber of trackedPointsSubscribersRef.current) {
@@ -327,7 +324,6 @@ export const ServerContextProvider: React.FC<{ children: ReactNode }> = ({childr
     }, []);
 
     const subscribeToFrames = useCallback((cameraId: string, callback: FrameSubscriber): (() => void) => {
-        console.log('subscribeToFrames entered')
         if (!frameSubscribersRef.current.has(cameraId)) {
             frameSubscribersRef.current.set(cameraId, new Set());
         }

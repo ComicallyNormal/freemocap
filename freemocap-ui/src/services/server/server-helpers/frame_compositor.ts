@@ -40,7 +40,6 @@ export class FrameCompositor {
         sourceBitmap: ImageBitmap,
         observation: CharucoObservation | null,
     ): Promise<ImageBitmap> {
-        console.log('compositeFrame entered')
         const { width, height } = sourceBitmap;
 
         // Resize canvas if needed

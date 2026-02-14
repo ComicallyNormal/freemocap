@@ -26,7 +26,6 @@ export function setupIPC(): void {
       }
 
       const result = await fn(input);
-      console.log('ipc seems to work');
       return superjson.serialize(result);
     } catch (error) {
       console.error(`IPC Error for ${path}:`, error);

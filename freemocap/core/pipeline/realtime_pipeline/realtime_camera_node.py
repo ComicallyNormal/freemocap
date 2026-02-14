@@ -14,6 +14,7 @@ from skellytracker.trackers.charuco_tracker.charuco_detector import CharucoDetec
 
 from skellytracker.trackers.mediapipe_tracker.mediapipe_detector import MediapipeDetector
 from skellytracker.trackers.mediapipe_gpu_tracker.mediapipe_gpu_detector import MediapipeGPUDetector
+from skellytracker.trackers.mediapipe_tracker.mediapipe_detector import MediapipeDetector
 
 from freemocap.core.pipeline.pipeline_configs import RealtimePipelineConfig
 from freemocap.core.pipeline.pipeline_ipc import PipelineIPC
@@ -108,6 +109,8 @@ class RealtimeCameraNode:
                 # Check trackers config updates
                 while not pipeline_config_subscription.empty():
                     new_pipeline_config_message: PipelineConfigUpdateMessage = pipeline_config_subscription.get()
+                    logger.debug(f"Received new skelly trackers for camera {camera_id}: {new_pipeline_config_message}")
+
                     config = new_pipeline_config_message.pipeline_config
   
 
@@ -158,7 +161,7 @@ class RealtimeCameraNode:
                         message=CameraNodeOutputMessage(
                             camera_id=frame_rec_array.frame_metadata.camera_config.camera_id[0],
                             frame_number=frame_rec_array.frame_metadata.frame_number[0],
-                            observation=observation,#TODO: Where did you come from where did you go
+                            observation=observation,
                         ),
                     )
                     tok2 = time.perf_counter_ns()

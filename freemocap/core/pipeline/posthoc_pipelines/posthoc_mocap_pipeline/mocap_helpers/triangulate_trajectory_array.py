@@ -57,10 +57,10 @@ def triangulate_array(
     if not calculate_reprojection_error:
         return triangulated3d_fr_id_xyz, np.array([]), np.array([])
     # Calculate reprojection errors
-    reprojection_error_full = camera_group.reprojection_error( #okat this gets us where we want
+    reprojection_error_full = camera_group.reprojection_error(
         triangulated_data_flat, data2d_flat
     )
-    reprojection_error_flat = camera_group.calculate_mean_reprojection_error( #HUH
+    reprojection_error_flat = camera_group.calculate_mean_reprojection_error( 
         reprojection_error_full
     )
     # print("flat ",reprojection_error_flat)
@@ -140,21 +140,29 @@ def triangulate_frame_observations(frame_number: int,
         config=config,
         calculate_reprojection_error=calculate_reprojection_error,
     )
+
+    rotated_triangulated = rotate_by_180_deg_about_x(triangulated_data)
+
     return Observation3d(
         frame_number=frame_number,
-        triangulated_data=np.squeeze(triangulated_data),
+        triangulated_data=np.squeeze(rotated_triangulated),
         names=list(frame_observations_by_camera.values())[0].to_tracked_points().keys(),
-        reprojection_error=repoj_error,
+        # reprojection_error=reprojection_error,
         # reprojection_error_by_camera=reprojection_error_by_camera,
     )
 
+def rotate_by_180_deg_about_x(points_3d: np.ndarray) -> np.ndarray:
+    rotation_matrix = np.array([[1, 0, 0],
+                                [0, -1, 0],
+                                [0, 0, -1]])
+    rotated_points = points_3d @ rotation_matrix.T
+    return rotated_points
 
 def triangulate_frame_groups(
         frame_groups: dict[int, FrameObservationsByCamera],
         camera_group: AniposeCameraGroup,
         config: TriangulationConfig,
 ) -> Trajectory3d:
-    # logger.info("triangulate frame groups entered")
     observations_3d = []
     frame_groups = dict(sorted(frame_groups.items()))
     for frame_number, frame_group in frame_groups.items():
@@ -169,7 +177,6 @@ def triangulate_trajectories(
         camera_group: AniposeCameraGroup,
         config: TriangulationConfig,
 ):
-    # logger.info("triangulate_trajectories entered")
     # TODO: move this validation into Trajectory2dGroup creation
     if len(set(trajectory.start_frame for trajectory in trajectory_group.values())) != 1:
         raise ValueError(
@@ -218,7 +225,6 @@ def triangulate_dict(
         start_frame: int | None = None,
         end_frame: int | None = None,
 ) -> Trajectory3d:
-    # logger.info("triangulate_dict entered")
     camera_group = subset_camera_names(
         data_dict=data2d_fr_mar_xy_by_camera, anipose_camera_group=camera_group
     )
