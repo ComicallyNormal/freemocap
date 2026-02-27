@@ -147,7 +147,7 @@ def triangulate_frame_observations(frame_number: int,
         frame_number=frame_number,
         triangulated_data=np.squeeze(rotated_triangulated),
         names=list(frame_observations_by_camera.values())[0].to_tracked_points().keys(),
-        # reprojection_error=reprojection_error,
+        reprojection_error=repoj_error,
         # reprojection_error_by_camera=reprojection_error_by_camera,
     )
 

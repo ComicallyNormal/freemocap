@@ -30,6 +30,8 @@ from ajc27_freemocap_blender_addon.core_functions.main_controller import MainCon
 from ajc27_freemocap_blender_addon.data_models.parameter_models.load_parameters_config import \
     load_default_parameters_config
 
+
+import json
 from ajc27_freemocap_blender_addon.core_functions.setup_scene.clear_scene import clear_scene
 
 
@@ -210,8 +212,10 @@ class RealtimeAggregationNode:
                          
                         # logger.info(reprojection_error) #error of observation
                         # logger.info("calculated reprojection error shape: ",reprojection_error.shape)
-                        if(len(point_list)==33):
+
+                        if(len(point_list)==33 and type(reprojection_error) != None and config.mocap_task_config.modelName == "gpu_accelerated"):
                             pose_json =""
+                            final_payload = ""
                             valid_pose = False
                             try:
                                 #Note our race condition right now, we need this to start happening only if a client is open.    
@@ -225,9 +229,19 @@ class RealtimeAggregationNode:
                                     center_of_mass = np.empty(1)
                                     #wrapping reprojection error as list of one
                                     squeezed_error  = np.squeeze(reprojection_error)
-                                    pose_json = controller.process_mediapipe_pose([point_list],[squeezed_error],center_of_mass,center,x_forward,y_left)
+                                    pose_mode =RealtimeAggregationNode.get_skeleton_mode()=="POINTS" 
+                                    if(pose_mode):
+                                        pose_json = controller.process_mediapipe_pose([point_list],[squeezed_error],center_of_mass,center,x_forward,y_left)
+                                    elif(pose_mode):
+                                        pose_json = controller.process_mediapipe_pose_as_gltf([point_list],[squeezed_error],center_of_mass,center,x_forward,y_left)
+
+                                    final_payload_dict = {"pose_mode":pose_mode, "pose": pose_json}
+                                    final_payload = json.dumps(final_payload_dict, separators=(",", ":"))
+                                    
                                     valid_pose = True
                                     print("valid pose!")
+
+
                             except Exception as e:
                                 print(e)
                                 traceback.print_exc()
@@ -237,7 +251,7 @@ class RealtimeAggregationNode:
 
                         # Broadcast to WebSocket clients
                             if ws_broadcaster.has_clients and valid_pose and ground_plane_operation_successful:
-                                ws_broadcaster.broadcast_json(pose_json)
+                                ws_broadcaster.broadcast_json(final_payload)
                                 logger.debug(f"Broadcasted frame {latest_requested_frame} to {ws_broadcaster.client_count} WebSocket client(s)")
 
                         
@@ -280,3 +294,11 @@ class RealtimeAggregationNode:
         self.shutdown_self_flag.value = True
         self.worker.join()
         logger.debug(f"AggregationNode worker stopped")
+
+
+    @staticmethod
+    def get_skeleton_mode():
+        standard_mode = "POINTS"
+        alternate_mode = "JOINTS"
+
+        return standard_mode
