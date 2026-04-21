@@ -113,13 +113,13 @@ class RealtimeAggregationNode:
             latest_requested_frame: int = -1
             last_received_frame: int = -1
             anipose_camera_group = AniposeCameraGroup.load(str(get_last_successful_calibration_toml_path()))
-            fname = "sample_skeleton_points.txt"
-            save_directory = "/home/alexmini/Documents/Projects/freemocap_forks/Mediapipe-VR-Fullbody-Tracking/test_data"             
-            file_reader = open(save_directory + "/"+fname, "a", encoding="utf-8")
+            #fname = "sample_skeleton_points.txt"
+            #save_directory = "/home/alexmini/Documents/Projects/freemocap_forks/Mediapipe-VR-Fullbody-Tracking/test_data"             
+            #file_reader = open(save_directory + "/"+fname, "a", encoding="utf-8")
           # Initialize and start WebSocket broadcaster
-            ws_broadcaster = WebSocketBroadcaster(host="localhost", port=8765)
+            ws_broadcaster = WebSocketBroadcaster(host="0.0.0.0", port=8765)
             ws_broadcaster.start()
-            logger.info("WebSocket broadcaster started on ws://localhost:8765")
+            logger.info("WebSocket broadcaster started on ws://0.0.0.0:8765")
 
             recording_path = "/home/alexmini/freemocap_data/realtime"
             blend_file_path = recording_path
@@ -205,6 +205,7 @@ class RealtimeAggregationNode:
                         # file_reader.write(json_to_write)
                         # file_reader.write("\n")
                         point_list = triangulated.to_point_list()
+
                         reprojection_error = triangulated.reprojection_error
                         
                         # print("Reprojection error is not none right?")
@@ -229,11 +230,17 @@ class RealtimeAggregationNode:
                                     center_of_mass = np.empty(1)
                                     #wrapping reprojection error as list of one
                                     squeezed_error  = np.squeeze(reprojection_error)
-                                    pose_mode =RealtimeAggregationNode.get_skeleton_mode()=="POINTS" 
-                                    if(pose_mode):
+                                    pose_mode =RealtimeAggregationNode.get_skeleton_mode() 
+                                    if(pose_mode == "POINTS"):
                                         pose_json = controller.process_mediapipe_pose([point_list],[squeezed_error],center_of_mass,center,x_forward,y_left)
-                                    elif(pose_mode):
+                                    elif(pose_mode== "JOINTS"):
                                         pose_json = controller.process_mediapipe_pose_as_gltf([point_list],[squeezed_error],center_of_mass,center,x_forward,y_left)
+                                    elif(pose_mode =="RAW"):
+                                        p_dict = {
+                                            i:{"x":obj.x,"y":obj.y,"z":obj.z}
+                                            for i,obj in enumerate(point_list)
+                                        }
+                                        pose_json= p_dict
 
                                     final_payload_dict = {"pose_mode":pose_mode, "pose": pose_json}
                                     final_payload = json.dumps(final_payload_dict, separators=(",", ":"))
@@ -300,5 +307,5 @@ class RealtimeAggregationNode:
     def get_skeleton_mode():
         standard_mode = "POINTS"
         alternate_mode = "JOINTS"
-
-        return standard_mode
+        raw_mode = "RAW"
+        return raw_mode

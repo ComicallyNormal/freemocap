@@ -37,7 +37,7 @@ class WebSocketBroadcaster:
         broadcaster.stop()
     """
 
-    def __init__(self, host: str = "localhost", port: int = 8765):
+    def __init__(self, host: str = "0.0.0.0", port: int = 8765):
         """
         Initialize the broadcaster.
 
